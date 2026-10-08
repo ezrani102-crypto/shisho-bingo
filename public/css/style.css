@@ -1,0 +1,85 @@
+:root {
+  --bg-color: #080510;
+  --panel-bg: rgba(25, 15, 45, 0.6);
+  --primary-gold: #FFD700;
+  --text-main: #FFFFFF;
+  --text-muted: #A095B5;
+  --error-red: #FF4D4D;
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg-color);
+  background-image: radial-gradient(circle at top right, #1a0b2e, #080510);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* Header */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(8, 5, 16, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 10;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Wallet Status UI */
+.wallet-loading { color: var(--text-muted); font-size: 0.9rem; }
+.wallet-balance { color: var(--primary-gold); font-weight: bold; font-size: 1rem; }
+.wallet-error { display: flex; align-items: center; gap: 8px; color: var(--error-red); font-size: 0.85rem; }
+.btn-retry {
+  background: rgba(255, 77, 77, 0.2); border: 1px solid var(--error-red);
+  color: var(--error-red); padding: 4px 8px; border-radius: 4px; cursor: pointer;
+}
+
+/* Main Content */
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.glass-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0 24px 0;
+  background: rgba(8, 5, 16, 0.95);
+  border-top: 1px solid var(--glass-border);
+}
+
+.nav-item {
+  background: none; border: none; color: var(--text-muted);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+}
+
+.nav-item.active { color: var(--primary-gold); }
