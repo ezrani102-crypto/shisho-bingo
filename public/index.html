@@ -6,7 +6,7 @@
   <title>SHISHO BINGO</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root { --bg: #080510; --gold: #FFD700; --purple: #3a1c71; --red: #e74c3c; --green: #2ecc71; --glass: rgba(25, 15, 45, 0.8); }
+    :root { --bg: #080510; --gold: #FFD700; --purple: #3a1c71; --red: #e74c3c; --green: #2ecc71; --glass: rgba(25, 15, 45, 0.85); }
     body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
     .header { padding: 15px; background: var(--glass); display: flex; justify-content: space-between; border-bottom: 1px solid #333; }
     .logo { color: var(--gold); font-weight: bold; }
@@ -17,19 +17,15 @@
     .hidden { display: none !important; }
     .card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; }
     .btn { background: var(--gold); color: #000; border: none; padding: 10px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;}
-    
-    /* Cartelas Grid */
     .cartela-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
     .cartela { padding: 15px 0; text-align: center; border-radius: 5px; background: var(--purple); font-weight: bold; cursor: pointer;}
     .cartela.taken { background: var(--red); opacity: 0.5; }
-    .cartela.mine { background: var(--gold); color: #000; box-shadow: 0 0 10px var(--gold); }
-    
-    /* Bingo Board */
+    .cartela.mine { background: var(--gold); color: #000; }
     .bingo-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-top: 10px; background: #222; padding: 2px; }
-    .cell { background: #111; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+    .cell { background: #111; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
     .cell.called { background: var(--gold); color: #000; }
     .cell.free { background: var(--purple); color: #fff; }
-    .game-status { text-align: center; font-size: 24px; color: var(--gold); margin: 10px 0; font-weight: bold;}
+    .game-status { text-align: center; font-size: 26px; color: var(--gold); margin: 10px 0; font-weight: bold;}
   </style>
 </head>
 <body>
@@ -38,28 +34,25 @@
     <div class="logo">SHISHO BINGO</div>
     <div id="wallet-status">
       <span id="w-loading">Loading...</span>
-      <span id="w-error" class="hidden" style="color:var(--red)">Error <button onclick="fetchMe()" style="background:none;border:1px solid var(--red);color:var(--red)">Retry</button></span>
+      <span id="w-error" class="hidden" style="color:var(--red)">Wallet Unavailable <button onclick="fetchMe()">Retry</button></span>
       <strong id="w-balance" class="hidden"><span id="bal-amt"></span> BIRR</strong>
     </div>
   </div>
 
   <div class="content">
-    <!-- PLAY TAB -->
     <div id="tab-play">
       <div id="room-list"></div>
       <div id="room-detail" class="hidden">
         <h2 id="r-title"></h2>
         <p>Pot: <span id="r-pot"></span> BIRR | Status: <strong id="r-status" style="color:var(--gold)"></strong></p>
         
-        <!-- Game UI -->
         <div id="game-ui" class="hidden">
           <div class="game-status" id="g-current-num">Waiting...</div>
           <p>Recent: <span id="g-recent"></span></p>
           <div id="bingo-boards"></div>
-          <button class="btn" onclick="claimBingo()" style="background:var(--green); color:white;">🎉 BINGO!</button>
+          <button class="btn" onclick="claimBingo()" style="background:var(--green); color:white; font-size:18px; padding:14px;">🎉 BINGO!</button>
         </div>
 
-        <!-- Cartela Selection UI -->
         <div id="cartela-ui">
           <p>Select Cartela (10 BIRR) - Max 2</p>
           <div class="cartela-grid" id="c-grid"></div>
@@ -68,12 +61,11 @@
       </div>
     </div>
 
-    <!-- WALLET TAB -->
     <div id="tab-wallet" class="hidden">
       <div class="card">
-        <h2>Deposit Money</h2>
-        <input type="number" id="dep-amt" placeholder="Amount (Min 10)" style="width:100%; padding:10px; margin-bottom:10px;">
-        <input type="text" id="dep-tx" placeholder="Telebirr Tx ID" style="width:100%; padding:10px; margin-bottom:10px;">
+        <h2>Deposit (Telebirr)</h2>
+        <input type="number" id="dep-amt" placeholder="Amount (Min 10 BIRR)" style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="text" id="dep-tx" placeholder="Telebirr Transaction ID" style="width:100%; padding:10px; margin-bottom:10px;">
         <button class="btn" onclick="submitDeposit()">Submit Deposit</button>
       </div>
     </div>
@@ -87,11 +79,9 @@
   <script>
     const tg = window.Telegram.WebApp; tg.expand(); tg.ready();
     const headers = { 'Authorization': `Bearer ${tg.initData}`, 'Content-Type': 'application/json' };
-    
     let currentRoom = null;
     let pollInterval = null;
 
-    // 1. Wallet Fetch (Strict Error Handling)
     async function fetchMe() {
       document.getElementById('w-loading').classList.remove('hidden');
       document.getElementById('w-error').classList.add('hidden');
@@ -109,7 +99,6 @@
       }
     }
 
-    // 2. Load Rooms
     async function loadRooms() {
       const res = await fetch('/api/rooms', { headers });
       const rooms = await res.json();
@@ -119,31 +108,29 @@
           <h3>Room #${r.room_number}</h3><p>Pot: ${r.prize_pool} BIRR | Status: ${r.status}</p>
         </div>`;
       });
-      document.getElementById('room-list').innerHTML = html || '<p>No active rooms.</p>';
+      document.getElementById('room-list').innerHTML = html || '<p>No active rooms. Create one via /createroom</p>';
     }
 
-    // 3. Room & Cartela Logic
     async function joinRoom(id, num) {
       currentRoom = id;
       document.getElementById('room-list').classList.add('hidden');
       document.getElementById('room-detail').classList.remove('hidden');
       document.getElementById('r-title').innerText = `Room #${num}`;
       pollRoomState();
-      pollInterval = setInterval(pollRoomState, 2000); // Poll every 2s
+      pollInterval = setInterval(pollRoomState, 2000);
     }
 
     function backToRooms() {
       clearInterval(pollInterval); currentRoom = null;
       document.getElementById('room-list').classList.remove('hidden');
       document.getElementById('room-detail').classList.add('hidden');
-      loadRooms(); fetchMe(); // Refresh wallet
+      loadRooms(); fetchMe();
     }
 
     async function pollRoomState() {
       if(!currentRoom) return;
       const res = await fetch(`/api/rooms/${currentRoom}/state`, { headers });
       const data = await res.json();
-      
       document.getElementById('r-pot').innerText = data.room.prize_pool;
       document.getElementById('r-status').innerText = data.room.status;
 
@@ -155,6 +142,9 @@
         document.getElementById('cartela-ui').classList.add('hidden');
         document.getElementById('game-ui').classList.remove('hidden');
         renderGame(data);
+      } else if (data.room.status === 'FINISHED') {
+        alert("Game finished!");
+        backToRooms();
       }
     }
 
@@ -163,7 +153,7 @@
       for(let i=1; i<=100; i++) {
         const c = cartelas.find(x => x.cartela_number === i);
         let cls = 'cartela';
-        if(c) cls += c.user_id === myId ? ' mine' : ' taken';
+        if(c) cls += c.user_id === myId ? ' mine' : (c.status === 'TAKEN' ? ' taken' : '');
         html += `<div class="${cls}" onclick="toggleCartela(${i})">${i}</div>`;
       }
       document.getElementById('c-grid').innerHTML = html;
@@ -174,12 +164,10 @@
         const res = await fetch(`/api/rooms/${currentRoom}/cartela`, { method: 'POST', headers, body: JSON.stringify({number: num}) });
         const data = await res.json();
         if(!res.ok) throw new Error(data.error);
-        tg.HapticFeedback.impactOccurred('light');
-        pollRoomState(); fetchMe(); // Instantly update UI and Wallet
+        pollRoomState(); fetchMe();
       } catch (e) { alert(e.message); }
     }
 
-    // 4. Game Engine Render
     function renderGame(data) {
       const g = data.game;
       if(g.current) document.getElementById('g-current-num').innerText = `🎱 ${g.current}`;
@@ -189,10 +177,8 @@
       let boardHtml = '';
       myCartelas.forEach(c => {
         boardHtml += `<h4>Cartela #${c.cartela_number}</h4><div class="bingo-board">`;
-        // Deterministic Pseudo-Random Board Generator based on Cartela Number
         let seed = c.cartela_number * 1234;
         const random = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-        
         for(let col=0; col<5; col++) {
           let pool = Array.from({length:15}, (_,i) => i + 1 + (col*15));
           for(let row=0; row<5; row++) {
@@ -208,12 +194,21 @@
       document.getElementById('bingo-boards').innerHTML = boardHtml;
     }
 
-    // 5. Utility
+    async function claimBingo() {
+      try {
+        const res = await fetch(`/api/rooms/${currentRoom}/bingo`, { method: 'POST', headers });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error === 'NOT_BINGO_YET' ? 'Not Bingo yet! Keep watching numbers.' : data.error);
+        alert(`🏆 BINGO! You won ${data.prize} BIRR with Cartela #${data.cartela}!`);
+        backToRooms();
+      } catch(e) { alert(e.message); }
+    }
+
     async function submitDeposit() {
       const amt = document.getElementById('dep-amt').value;
       const tx = document.getElementById('dep-tx').value;
       const res = await fetch('/api/deposits', { method: 'POST', headers, body: JSON.stringify({amount:amt, tx:tx}) });
-      if(res.ok) { alert('Deposit submitted for review!'); document.getElementById('dep-tx').value=''; }
+      if(res.ok) { alert('Deposit submitted for admin approval!'); document.getElementById('dep-tx').value=''; }
       else alert('Error submitting deposit.');
     }
 
